@@ -173,6 +173,19 @@ loadError:
 	return !cleanExit;
 }
 
+static void _stdoutInnerLog(struct mCore* core) {
+	struct ARMCore * cpu = core->cpu;
+	char logs[1024];
+	int i = 0;
+	while (1) {
+		uint8_t a = cpu->memory.load8(cpu, 0x0E000000 + i, 0);
+		logs[i] = a;
+		++i;
+		if (a == '\0') break;
+	}
+	printf("%s", logs);
+}
+
 static void _fuzzRunloop(struct mCore* core, int frames) {
 	do {
 		core->runFrame(core);
@@ -180,6 +193,7 @@ static void _fuzzRunloop(struct mCore* core, int frames) {
 		blip_clear(core->getAudioChannel(core, 0));
 		blip_clear(core->getAudioChannel(core, 1));
 	} while (frames > 0 && !_dispatchExiting);
+	_stdoutInnerLog(core);
 }
 
 static void _fuzzShutdown(int signal) {
